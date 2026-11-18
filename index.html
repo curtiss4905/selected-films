@@ -1,0 +1,153 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Selected Films</title><meta name="robots" content="noindex,nofollow">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one large screening stage on top, a contact-sheet strip of all films below (tiles keep each film's real aspect ratio). */
+:root {
+  --bg: #0e181c;
+  --surface: #16242a;
+  --line: #2a3b42;
+  --fg: #eaf0ee;
+  --muted: #8fa3a6;
+  --accent: #f2d15c;
+  --on-accent: #1a1705;
+  --stage: #05090b;
+  --display: "Syne", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --body: "Inter", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #edf1ef; --surface: #ffffff; --line: #cfd9d6; --fg: #12201f; --muted: #58696a;
+    --accent: #1f5c66; --on-accent: #f3fbfa; --stage: #0b1114; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #edf1ef; --surface: #ffffff; --line: #cfd9d6; --fg: #12201f; --muted: #58696a;
+  --accent: #1f5c66; --on-accent: #f3fbfa; --stage: #0b1114; color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap {
+  max-width: 1180px; margin: 0 auto; padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px;
+}
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 5vw, 46px); letter-spacing: -0.02em; line-height: 1; margin: 0; }
+.tally { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.stage { background: var(--stage); border-radius: 6px; display: flex; justify-content: center; overflow: hidden; }
+.stage video { display: block; aspect-ratio: var(--r); width: min(100%, calc(74vh * var(--r))); max-width: 100%; background: var(--stage); }
+
+.now { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.now > div { min-width: 0; }
+.now h2 { font-family: var(--display); font-weight: 600; font-size: clamp(22px, 3.4vw, 32px); letter-spacing: -0.01em; line-height: 1.1; margin: 0 0 4px; text-wrap: balance; }
+.meta { font-family: var(--mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); font-variant-numeric: tabular-nums; }
+.nav { display: flex; gap: 8px; }
+.nav button {
+  font: 500 13px var(--body); color: var(--fg); background: transparent; border: 1px solid var(--line);
+  border-radius: 999px; padding: 8px 16px; cursor: pointer;
+}
+.nav button:hover { border-color: var(--accent); color: var(--accent); }
+
+.sheet-head { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+.sheet { display: flex; flex-wrap: wrap; gap: 20px 14px; }
+.card {
+  flex: var(--r) 1 calc(var(--r) * 170px); max-width: calc(var(--r) * 300px); min-width: 0;
+  display: flex; flex-direction: column; gap: 8px; text-align: left;
+  background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer;
+}
+.thumb { position: relative; aspect-ratio: var(--r); width: 100%; border-radius: 4px; overflow: hidden; background: var(--surface); outline: 2px solid transparent; outline-offset: 2px; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .35s ease; }
+.card:hover .thumb img { transform: scale(1.04); }
+.card[aria-current="true"] .thumb { outline-color: var(--accent); }
+.badge { position: absolute; left: 6px; bottom: 6px; font: 500 11px var(--mono); background: var(--accent); color: var(--on-accent); padding: 2px 6px; border-radius: 3px; }
+.card .name { font-weight: 600; font-size: 14px; line-height: 1.25; overflow-wrap: anywhere; }
+.card .tc { font-family: var(--mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .thumb img { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Selected Films</h1>
+    <div class="tally" id="tally"></div>
+  </header>
+
+  <div class="stage"><video id="player" controls playsinline preload="metadata"></video></div>
+
+  <div class="now">
+    <div>
+      <h2 id="title"></h2>
+      <div class="meta" id="meta"></div>
+    </div>
+    <div class="nav">
+      <button type="button" id="prev">← 이전</button>
+      <button type="button" id="next">다음 →</button>
+    </div>
+  </div>
+
+  <div class="sheet-head">전체 영상</div>
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+const FILMS = [
+  { id: "kite",             title: "Kite",             sec: 153, w: 16, h: 9, v: "media/kite.mp4", p: "media/kite.jpg" },
+  { id: "only-yours",       title: "Only Yours",       sec: 180, w: 9, h: 16, v: "media/only-yours.mp4", p: "media/only-yours.jpg" },
+  { id: "first-impression", title: "First Impression", sec: 130, w: 9, h: 16, v: "media/first-impression.mp4", p: "media/first-impression.jpg" },
+  { id: "butter",           title: "Butter",           sec: 111, w: 16, h: 9, v: "media/butter.mp4", p: "media/butter.jpg" },
+  { id: "curly-shyll",      title: "Curly Shyll",      sec: 34,  w: 16, h: 9, v: "media/curly-shyll.mp4", p: "media/curly-shyll.jpg" },
+  { id: "bleu-de-chanel",   title: "Bleu de Chanel",   sec: 32,  w: 16, h: 9, v: "media/bleu-de-chanel.mp4", p: "media/bleu-de-chanel.jpg" }
+];
+const tc = s => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+const $ = id => document.getElementById(id);
+const player = $("player"), sheet = $("sheet");
+let current = -1;
+
+$("tally").textContent = FILMS.length + " films · TRT " + tc(FILMS.reduce((a, f) => a + f.sec, 0));
+
+FILMS.forEach((f, i) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "card"; b.style.setProperty("--r", f.w / f.h);
+  const t = document.createElement("div"); t.className = "thumb";
+  const img = document.createElement("img"); img.src = f.p; img.alt = f.title + " 스틸컷"; img.loading = "lazy";
+  t.appendChild(img);
+  const n = document.createElement("div"); n.className = "name"; n.textContent = f.title;
+  const d = document.createElement("div"); d.className = "tc"; d.textContent = tc(f.sec) + " · " + f.w + ":" + f.h;
+  b.append(t, n, d);
+  b.addEventListener("click", () => { location.hash = f.id; show(i, true); });
+  sheet.appendChild(b);
+});
+
+function show(i, play) {
+  i = (i + FILMS.length) % FILMS.length;
+  if (i === current) { if (play) player.play().catch(() => {}); return; }
+  current = i;
+  const f = FILMS[i];
+  player.style.setProperty("--r", f.w / f.h);
+  player.poster = f.p; player.src = f.v;
+  $("title").textContent = f.title;
+  $("meta").textContent = "TRT " + tc(f.sec) + " · " + f.w + ":" + f.h + (f.w < f.h ? " · 세로형" : "");
+  [...sheet.children].forEach((c, j) => {
+    c.setAttribute("aria-current", j === i ? "true" : "false");
+    const old = c.querySelector(".badge"); if (old) old.remove();
+    if (j === i) { const s = document.createElement("span"); s.className = "badge"; s.textContent = "재생 중"; c.querySelector(".thumb").appendChild(s); }
+  });
+  if (play) { player.play().catch(() => {}); player.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+}
+function fromHash(play) {
+  const i = FILMS.findIndex(f => f.id === location.hash.slice(1));
+  show(i < 0 ? 0 : i, play && i >= 0);
+}
+$("prev").addEventListener("click", () => { const i = (current - 1 + FILMS.length) % FILMS.length; location.hash = FILMS[i].id; show(i, true); });
+$("next").addEventListener("click", () => { const i = (current + 1) % FILMS.length; location.hash = FILMS[i].id; show(i, true); });
+window.addEventListener("hashchange", () => fromHash(true));
+fromHash(false);
+</script>
+
+</body></html>
