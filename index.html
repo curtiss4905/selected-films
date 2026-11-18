@@ -54,7 +54,14 @@ h1 { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 5vw, 
 }
 .nav button:hover { border-color: var(--accent); color: var(--accent); }
 
-.sheet-head { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+.brand { display: block; width: clamp(120px, 16vw, 168px); aspect-ratio: 1943 / 459; background: var(--fg);
+  -webkit-mask: url(media/mindrepublic-logo.png) left center / contain no-repeat; mask: url(media/mindrepublic-logo.png) left center / contain no-repeat; }
+.brand span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.groups { display: flex; flex-direction: column; gap: 32px; }
+.group { display: flex; flex-direction: column; gap: 16px; }
+.sheet-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 16px; }
+.sheet-head h3 { font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: -0.01em; line-height: 1.2; margin: 0; }
+.sheet-head span { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-variant-numeric: tabular-nums; }
 .sheet { display: flex; flex-wrap: wrap; gap: 20px 14px; }
 .card {
   flex: var(--r) 1 calc(var(--r) * 170px); max-width: calc(var(--r) * 300px); min-width: 0;
@@ -73,6 +80,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; bo
 </style>
 
 <div class="wrap">
+  <a class="brand" href="https://mindrepublic.co.kr/" target="_blank" rel="noopener"><span>MINDREPUBLIC</span></a>
   <header>
     <h1>Selected Films</h1>
     <div class="tally" id="tally"></div>
@@ -91,23 +99,33 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; bo
     </div>
   </div>
 
-  <div class="sheet-head">전체 영상</div>
-  <div class="sheet" id="sheet"></div>
+  <div class="groups" id="groups"></div>
 </div>
 
 <script>
+const GROUPS = ["광고", "뮤직비디오", "AI 드라마"];
 const FILMS = [
-  { id: "kite",             title: "Kite",             sec: 153, w: 16, h: 9, v: "media/kite.mp4", p: "media/kite.jpg" },
-  { id: "only-yours",       title: "Only Yours",       sec: 180, w: 9, h: 16, v: "media/only-yours.mp4", p: "media/only-yours.jpg" },
-  { id: "first-impression", title: "First Impression", sec: 130, w: 9, h: 16, v: "media/first-impression.mp4", p: "media/first-impression.jpg" },
-  { id: "butter",           title: "Butter",           sec: 111, w: 16, h: 9, v: "media/butter.mp4", p: "media/butter.jpg" },
-  { id: "curly-shyll",      title: "Curly Shyll",      sec: 34,  w: 16, h: 9, v: "media/curly-shyll.mp4", p: "media/curly-shyll.jpg" },
-  { id: "bleu-de-chanel",   title: "Bleu de Chanel",   sec: 32,  w: 16, h: 9, v: "media/bleu-de-chanel.mp4", p: "media/bleu-de-chanel.jpg" },
-  { id: "pureal",           title: "정수기를 못 고르겠어요", sec: 41, w: 16, h: 9, yt: "qo5lhjuFzPo", p: "media/pureal.jpg" }
+  { id: "pureal",           cat: "광고",       title: "정수기를 못 고르겠어요", sec: 41, w: 16, h: 9, yt: "qo5lhjuFzPo", p: "media/pureal.jpg" },
+  { id: "curly-shyll",      cat: "광고",       title: "Curly Shyll",      sec: 34,  w: 16, h: 9, v: "media/curly-shyll.mp4", p: "media/curly-shyll.jpg" },
+  { id: "bleu-de-chanel",   cat: "광고",       title: "Bleu de Chanel",   sec: 32,  w: 16, h: 9, v: "media/bleu-de-chanel.mp4", p: "media/bleu-de-chanel.jpg" },
+  { id: "kite",             cat: "뮤직비디오", title: "Kite",             sec: 153, w: 16, h: 9, v: "media/kite.mp4", p: "media/kite.jpg" },
+  { id: "only-yours",       cat: "AI 드라마",  title: "Only Yours",       sec: 180, w: 9, h: 16, v: "media/only-yours.mp4", p: "media/only-yours.jpg" },
+  { id: "first-impression", cat: "AI 드라마",  title: "First Impression", sec: 130, w: 9, h: 16, v: "media/first-impression.mp4", p: "media/first-impression.jpg" },
+  { id: "butter",           cat: "AI 드라마",  title: "Butter",           sec: 111, w: 16, h: 9, v: "media/butter.mp4", p: "media/butter.jpg" }
 ];
 const tc = s => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
 const $ = id => document.getElementById(id);
-const player = $("player"), sheet = $("sheet");
+const player = $("player"), cards = [], sheets = {};
+GROUPS.forEach(g => {
+  const n = FILMS.filter(f => f.cat === g).length;
+  const sec = document.createElement("section"); sec.className = "group";
+  const head = document.createElement("div"); head.className = "sheet-head";
+  const h = document.createElement("h3"); h.textContent = g;
+  const c = document.createElement("span"); c.textContent = n + "편";
+  head.append(h, c);
+  const sh = document.createElement("div"); sh.className = "sheet";
+  sec.append(head, sh); $("groups").appendChild(sec); sheets[g] = sh;
+});
 let current = -1;
 
 $("tally").textContent = FILMS.length + " films · TRT " + tc(FILMS.reduce((a, f) => a + f.sec, 0));
@@ -122,7 +140,7 @@ FILMS.forEach((f, i) => {
   const d = document.createElement("div"); d.className = "tc"; d.textContent = tc(f.sec) + " · " + f.w + ":" + f.h;
   b.append(t, n, d);
   b.addEventListener("click", () => { location.hash = f.id; show(i, true); });
-  sheet.appendChild(b);
+  sheets[f.cat].appendChild(b); cards.push(b);
 });
 
 function show(i, play) {
@@ -146,8 +164,8 @@ function show(i, play) {
     player.poster = f.p; player.src = f.v;
   }
   $("title").textContent = f.title;
-  $("meta").textContent = "TRT " + tc(f.sec) + " · " + f.w + ":" + f.h + (f.w < f.h ? " · 세로형" : "");
-  [...sheet.children].forEach((c, j) => {
+  $("meta").textContent = f.cat + " · TRT " + tc(f.sec) + " · " + f.w + ":" + f.h + (f.w < f.h ? " · 세로형" : "");
+  cards.forEach((c, j) => {
     c.setAttribute("aria-current", j === i ? "true" : "false");
     const old = c.querySelector(".badge"); if (old) old.remove();
     if (j === i) { const s = document.createElement("span"); s.className = "badge"; s.textContent = "재생 중"; c.querySelector(".thumb").appendChild(s); }
